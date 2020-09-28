@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% verbatim vue %}
+<html lang="en">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="/static/element-ui/lib/theme-chalk/index.css">
+<style>
+  .el-header {
+      position: relative;
+      height: 60px;
+  }
+
+  .el-aside {
+  }
+
+  .el-main {
+  }
+
+</style>
+
+</head>
+<body>
+    <div id=app></div>
+</body>
+
+<!-- import JavaScript -->
+<!-- import Vue before Element -->
+<script src="/static/vue/dist/vue.js"></script>
+<script src="/static/vue-router/dist/vue-router.min.js"></script>
+<script src="/static/axios/dist/axios.min.js"></script>
+<script src="/static/element-ui/lib/index.js"></script>
+<script src="/static/element-ui/lib/en.js"></script>
+<script>
+  ELEMENT.locale(ELEMENT.lang.en)
+</script>
+
+<script>
+
+</script>
+<!-- import CKeditor -->
+<script src="/static/ckeditor5-build-classic/build/ckeditor.js"></script>
+<script src="/static/ckeditor5-vue/dist/ckeditor.js"></script>
+
+<!-- import Echarts -->
+<script src="/static/echarts/dist/echarts.js"></script>
+<script src="/static/echarts/theme/cool.js"></script>
+
+<!-- Custom component -->
+<script src="/static/easy/utils.js"></script>
+<script src="/static/easy/form.js"></script>
+<script src="/static/easy/chart.js"></script>
+
+<!-- layout -->
+<script src="/static/easy/header.js"></script>
+<script src="/static/easy/aside.js"></script>
+<script src="/static/easy/main.js"></script>
+<!-- app -->
+<script src="/static/easy/page.js"></script>
+
+{% endverbatim vue %}
+</html>
+

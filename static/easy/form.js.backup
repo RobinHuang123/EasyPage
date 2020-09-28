@@ -1,0 +1,283 @@
+var test_option = {
+}
+
+Vue.component('easy-form', {
+    template:`
+<el-form ref="form" :model="formData", size="mini" label-position="left">
+    <el-row :gutter="20">
+        <template v-for="(column, index) in colmuns">
+            <template v-if="column.form">
+                <el-col :span="column.form.span ? colmun.form.span : 8">
+                    <el-form-item
+                        :label="column.label"
+                        :required="column.form.required"
+                        label-width="colmun.form.label_width ? colmun.form.label_widt : 120px"
+                    >
+                        <template v-if="colmun.form.inputType == 'text'">
+                            <el-input
+                                clearable
+                                v-model="formData[column.name]"
+                                :readoly="column.form.readonly"
+                                placeholder="colmun.form.placeholder ? colmun.form.placeholder ? ""
+                        </template>
+                        <template v-if="colmun.form.inputType == 'ckeditor'">
+                            <ckeditor :editor="editor" v-model="formData[column.name]"></ckeditor>
+                        </template>
+                        <template v-else-if="colmun.form.inputType == 'switch'">
+                            <el-switch active-color="#13ce66" inactive-color="#ff4949" v-model="formData[colmun.name]"></el-switch>
+                        </template>
+                        <template v-else-if="colmun.form.inputType == 'datetime'">
+                            <el-date-picker
+                                clearable
+                                v-model="formData[column.name]"
+                                :readoly="column.form.readonly"
+                                type="datetime"
+                                value-format="yyyy-MM-ddTHH:mm:ss"
+                                placeholder="colmun.form.placeholder ? colmun.form.placeholder ? Please select the datetime"
+                            </el-date-picker>
+                        </template>
+                        <template v-else-if="colmun.form.inputType == 'select'">
+                            <el-select
+                                clearable
+                                filterable
+                                :multiple="column.form.multi"
+                                v-model="formData[column.name]"
+                                placeholder="colmun.form.placeholder ? colmun.form.placeholder ? Please select"
+                                <el-option v-for="item in selectOpts[column.name]" :key="item.id"
+                                    :label="item.text"
+                                    :value="item.id"
+                                ></el-option>
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+            </template>
+        </template>
+    </el-row>
+    <el-row :gutter="20" style="float: right;">
+        <el-form-item>
+            <template v-for="(b, index) in buttons">
+                <template v-if="b == 'create'">
+                    <el-button type="primary" @click="createData" > Create </el-button>
+                </template>
+                <template v-if="b == 'update'">
+                    <el-button type="warning" @click="updateData" > Update </el-button>
+                </template>
+                <template v-if="b == 'delete'">
+                    <el-button type="danger" @click="deleteData" > Delete  </el-button>
+                </template>
+                <template v-if="b == 'cancel'">
+                    <el-button type="warning"  > Cancel </el-button>
+                </template>
+            </template>
+        </el-form-item>
+        <el-header> </el-header>
+    </el-row>
+</el-form>
+    `,
+
+    props: ['x', 'y', 'z', 'width', 'height', 'url', 'colmuns', 'initData', 'buttons'],
+    data: function() {
+        return {
+            title: 'form_title',
+            option: {},
+            formData: new Object(),
+            submitData: new Object(),
+            selectOpts: {},
+            editor: ClassicEditor,
+            visible: false,
+            is_saving_now: false,
+        }
+    },
+    methods: {
+        onSubmit: function() {
+            console.log(this.url)
+            console.log(this.formData)
+            if (this.formData.id) {
+                this.updateData()
+            } else {
+                this.createData()
+            }
+        },
+        clearData: function() {
+            this.formData = new Object()
+        },
+        createData: function() {
+            if (this.is_saving_now == true) {
+                this.notify_saving("Saving ..., cannot submit duplicated data")
+                return
+            } else {
+                this.is_saving_now = true
+                this.notify_saving("Saving data ...")
+            }
+
+            this.visible = false
+            var self = this
+            var data = this.getFormData()
+            data.id = null;
+            axios
+                .post(self.url, data)
+                .then(function(response) {
+                    console.log(response)
+                    self.notify_success(response.data)
+                    self.$emit('func')
+                })
+                .catch(function (error) {
+                    console.log(error)
+                    self.notify_error(error.response.data)
+                })
+            setTimeout(this.set_saving_false, 2000)
+        },
+        updateData: function() {
+            if (this.is_saving_now == true) {
+                this.notify_saving("Saving ..., cannot submit duplicated data")
+            } else {
+                this.is_saving_now = true
+                this.notify_saving("Saving data ...")
+            }
+            var self = this
+            axios
+                .put(self.url, self.getFormData())
+                .then(function(response) {
+                    console.log(response)
+                    self.notify_success(response.data)
+                    self.$emit('func')
+                })
+                .catch(function (error) {
+                    console.log(error.response.data)
+                    self.notify_error(error.response.data)
+                })
+            setTimeout(this.set_saving_false, 2000)
+        },
+        deleteData: function() {
+            if (this.is_saving_now == true) {
+                this.notify_saving("Saving ..., cannot submit duplicated data")
+            } else {
+                this.is_saving_now = true
+                this.notify_saving("Saving data ...")
+            }
+            var self = this
+            var params = {id: self.getFormData().id }
+            axios
+                .delete(self.url, {data: params})
+                .then(function(response) {
+                    console.log(response)
+                    self.notify_success_delete(response.data)
+                    self.$emit('func')
+                })
+                .catch(function(error) {
+                    console.log(error)
+                    self.notify_error(error.response.data)
+                })
+            setTimeout(this.set_saving_false, 2000)
+        },
+        getFormData: function() {
+            var row = this.formData
+            var row_new = {}
+            console.log(this.columns)
+            for (var k in this.columns) {
+                var col = this.colmuns[k]
+                if (col.form && col.form.inputType == 'select' && col.form.multi && row[col.name]) {
+                    if(row[col.name] != null && row[col.prop] != undefined) {
+                        row_new[col.name] = row[col.prop].sort().join(",")
+                    }
+                } else {
+                    row_new[col.name] = row[col.name]
+                }
+            }
+            this.submitData = row_new
+            return this.submitData
+        },
+        setFormData: function(row) {
+            var row_new = {}
+            for (var k in this.columns) {
+                var col = this.columns[k]
+                if (col.form && col.form.inputType == 'select' && col.form.multi && row[col.name]) {
+                    var tmp = row[col.name].split(',')
+                    row_new[col.name] = new Array()
+                    for (var i in tmp) {
+                        row_new[col.name].push(parseInt(tmp[i]))
+                    }
+                } else if (col.form && col.form.inputType == 'ckeditor') {
+                    if (row[col.name] == null || row[col.name] == undefined) {
+                        row_new[col.prop] = ""
+                    } else {
+                        row_new[col.name] = row[col.name]
+                    }
+                } else {
+                    row_new[col.name] = row[col.name]
+                }
+            }
+            this.formData = row_new;
+        },
+        loadSelectOpts: function() {
+            for (var i in this.columns) {
+                col = this.colmuns[i]
+                if (col.form && col.form.inputType == 'select') {
+                    this.loadSelectOpt(col)
+                    if (col.form.list) {
+                        this.selectOpts[col.name] = col.form.list
+                    } else {
+                        var self = this
+                        axios.get(col.form.url).then(function(response) {
+                                if (response.data.data) {
+                                    self.$set(self.selectOpts, col.name, response.data.data)
+                                } else {
+                                    self.$set(self.selectOpts, col.name, response.data)
+                                }
+                            }).catch(function(error) {
+                                alert(error)
+                            })
+                    }
+                }
+            }
+        },
+        set_saving_false: function() {
+            this.is_saving_now = false
+        },
+        notify_saving: function(msg) {
+            this.$notify({
+                title: msg,
+                message: '',
+                type: 'success'
+            })
+        },
+        notify_success: function(msg) {
+            this.$notify({
+                title: 'Saved successfully',
+                message: msg,
+                type: 'success'
+            })
+        },
+        notify_success_delete: function(msg) {
+            this.$notify({
+                title: "Deleted successfully",
+                message: msg,
+                type: "success"
+            })
+        },
+        notify_error: function(msg) {
+            this.$notify({
+                title: "ERROR",
+                message: msg,
+                duration: 0, //do not close by default
+            })
+        },
+    },
+    created() {
+        console.log('a form is created');
+        console.log(this.initData);
+        this.setFormData(this.initData)
+        console.log(this.formData) //check if form data is consistent with initData
+        this.loadSelectOpts()
+    },
+    watch: {
+        colmuns: function(new_value, old_value) {
+            console.log("columns changed", new_value, old_value)
+            this.loadSelectOpts()
+        },
+        initData: function(new_value, old_value) {
+            this.setFormData(new_value)
+        }
+    }
+})

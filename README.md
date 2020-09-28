@@ -1,1 +1,1 @@
-# EasyUI
+# EasyVue
